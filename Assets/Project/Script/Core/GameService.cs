@@ -41,7 +41,7 @@ namespace Gazeus.DesafioMatch3.Core
 
         public List<List<Tile>> StartGame(int boardWidth, int boardHeight)
         {
-            _tilesTypes = new List<int> { 0, 1, 2, 3 };
+            _tilesTypes = new List<int> { 0, 1, 2, 3};
             _boardTiles = CreateBoard(boardWidth, boardHeight, _tilesTypes);
 
             return _boardTiles;

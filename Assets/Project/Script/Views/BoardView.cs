@@ -14,7 +14,10 @@ namespace Gazeus.DesafioMatch3.Views
 
         [SerializeField] private GridLayoutGroup _boardContainer;
         [SerializeField] private TilePrefabRepository _tilePrefabRepository;
+        [SerializeField] private ParticlePrefabRepository _particlePrefabRepository;
         [SerializeField] private TileSpotView _tileSpotPrefab;
+        [SerializeField] private Material _StoneMaterial;
+        
 
         private GameObject[][] _tiles;
         private TileSpotView[][] _tileSpots;
@@ -77,13 +80,32 @@ namespace Gazeus.DesafioMatch3.Views
 
         public Tween DestroyTiles(List<Vector2Int> matchedPosition)
         {
+
             for (int i = 0; i < matchedPosition.Count; i++)
             {
                 Vector2Int position = matchedPosition[i];
+                
+                GameObject particlePrefab = matchedPosition.Count > 3
+                    ? _particlePrefabRepository.ParticleTypePrefabList[0]
+                    : _particlePrefabRepository.ParticleTypePrefabList[1];
+                
+
+                GameObject particle = Instantiate(particlePrefab,
+                    _tiles[position.y][position.x].transform.position, Quaternion.identity);
+                Destroy(particle, 0.5f);
+
+                _StoneMaterial.DOKill();
+                _StoneMaterial.DOFloat(0.3f, "_Slide", 1f).SetEase(Ease.OutCubic).onComplete = () =>
+                {
+                    _StoneMaterial.SetFloat("_Slide", 0.85f);
+                };
+                
+                
                 Destroy(_tiles[position.y][position.x]);
                 _tiles[position.y][position.x] = null;
             }
 
+            
             return DOVirtual.DelayedCall(0.2f, () => { });
         }
 
@@ -125,6 +147,25 @@ namespace Gazeus.DesafioMatch3.Views
 
             (_tiles[toY][toX], _tiles[fromY][fromX]) = (_tiles[fromY][fromX], _tiles[toY][toX]);
 
+            return sequence;
+        }
+        
+
+        public Tween AnimateTileSelection (int x, int y)
+        {
+            Sequence sequence = DOTween.Sequence();
+            sequence.Append(_tiles[y][x].transform.DOScale(1.5f, 0.1f)
+                .SetLoops(2, LoopType.Yoyo));
+            return sequence;
+        }
+        
+        public Tween PulseAnimation (int x, int y, float value)
+        {
+            Image image = _tiles[y][x].GetComponentInChildren<Image>();
+            image.material =  new Material(image.material);
+            Sequence sequence = DOTween.Sequence();
+            sequence.Append(image.material.DOFloat(value, "_IsSelected", 0.2f));
+                
             return sequence;
         }
 
